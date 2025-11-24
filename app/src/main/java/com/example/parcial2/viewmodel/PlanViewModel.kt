@@ -1,11 +1,13 @@
 package com.example.parcial2.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.parcial2.model.Plan
 import com.example.parcial2.repository.SavingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.parcial2.core.UiState
+import com.example.parcial2.model.Member
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -16,6 +18,10 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
 
     private val _planDetail = MutableStateFlow<UiState<Plan>>(UiState.Loading)
     val planDetail: StateFlow<UiState<Plan>> = _planDetail
+
+
+    private val _members = MutableStateFlow<UiState<List<Member>>>(UiState.Idle)
+    val members: StateFlow<UiState<List<Member>>> get() = _members
 
     fun fetchPlans() {
         viewModelScope.launch {
@@ -46,4 +52,33 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
             }
         }
     }
+
+
+
+    fun fetchMembersByPlan(planId: String) {
+        viewModelScope.launch {
+            Log.d("PlanVM", "Fetching members for planId: $planId")
+            _members.value = UiState.Loading
+            try {
+                val res = repo.getMembersByPlanId(planId)
+                if (res.isSuccessful) {
+                    val body = res.body() ?: emptyList()
+                    if (body.isEmpty()) {
+                        _members.value = UiState.Error("No hay miembros en este plan")
+                    } else {
+                        _members.value = UiState.Success(body)
+                    }
+                } else if (res.code() == 404) {
+                    _members.value = UiState.Error("No se encontraron miembros para este plan")
+                } else {
+                    _members.value = UiState.Error("Error: ${res.code()}")
+                }
+            } catch (e: Exception) {
+                _members.value = UiState.Error(e.message ?: "Error inesperado")
+            }
+        }
+    }
 }
+
+
+

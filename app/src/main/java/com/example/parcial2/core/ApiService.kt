@@ -28,8 +28,8 @@ interface ApiService {
     @POST("api/members")
     suspend fun createMember(@Body member: Member): Response<Member>
 
-    @GET("api/members")
-    suspend fun getMembers(): Response<List<Member>>
+    @GET("plans/{planId}/members")
+    suspend fun getMembersByPlanId(@Path("planId") planId: String): Response<List<Member>>
 
     @GET("api/members/plan/{planId}")
     suspend fun getMembersByPlan(@Path("planId") planId: String): Response<List<Member>>

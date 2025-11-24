@@ -1,5 +1,7 @@
 package com.example.parcial2.view
 
+import android.R.attr.text
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.wear.compose.materialcore.Text
 import com.example.parcial2.core.UiState
 import com.example.parcial2.model.Member
 import com.example.parcial2.model.Payment
@@ -51,80 +55,94 @@ fun SavingPlanDetailScreen(
     val paymentViewModel: PaymentViewModel = viewModel(factory = factory)
 
     val planState by planViewModel.planDetail.collectAsState()
+    val membersState by planViewModel.members.collectAsState()
     val paymentsState by paymentViewModel.payments.collectAsState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    // Cargar datos al iniciar
+    // Cargar plan, miembros y pagos al entrar a la pantalla
     LaunchedEffect(planId) {
+        Log.d("Screen", "Calling fetchMembersByPlan with $planId")
         planViewModel.fetchPlanById(planId)
+        planViewModel.fetchMembersByPlan(planId)
         paymentViewModel.fetchPaymentsByPlan(planId)
+
+        planViewModel.fetchMembersByPlan(planId)
     }
 
-    // Mostrar errores en Snackbar
-    LaunchedEffect(planState, paymentsState) {
-        (planState as? UiState.Error)?.let { snackbarHostState.showSnackbar(it.message) }
-        (paymentsState as? UiState.Error)?.let { snackbarHostState.showSnackbar(it.message) }
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .padding(paddingValues)
-        ) {
+        // ----- PLAN -----
+        when (planState) {
+            is UiState.Loading -> CircularProgressIndicator()
+            is UiState.Success -> {
+                val plan = (planState as UiState.Success<Plan>).data
+                Text(plan.name ?: "Sin nombre", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text("${plan.durationInMonths ?: 0} meses")
+                Text("$${plan.goalAmount ?: 0.0}")
 
-            // ----- PLAN -----
-            when (val planData = planState) {
-                is UiState.Loading -> CircularProgressIndicator()
-                is UiState.Success -> {
-                    val plan = planData.data
-                    Text(plan.name ?: "Sin nombre", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text("${plan.durationInMonths ?: 0} meses")
-                    Spacer(Modifier.height(8.dp))
-                    Text("$${plan.goalAmount ?: 0.0}")
+                Spacer(Modifier.height(16.dp))
 
-                    Spacer(Modifier.height(32.dp))
-                    Text("Miembros", fontSize = 20.sp)
-                    Spacer(Modifier.height(16.dp))
-
-                    LazyColumn {
-                        items(plan.members ?: emptyList()) { member ->
-                            MemberItem(member)
-                        }
+                if (!plan.id.isNullOrBlank()) {
+                    Button(
+                        onClick = { navController.navigate("register_payment/${plan.id}") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Registrar pago")
                     }
                 }
-                else -> {} // Idle o Error ya manejado por Snackbar
-            }
 
-            Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-            // ----- PAGOS -----
-            Text("Pagos", fontSize = 20.sp)
-            Spacer(Modifier.height(16.dp))
+                Text("Miembros", fontSize = 20.sp)
+                Spacer(Modifier.height(8.dp))
 
-            when (val paymentsData = paymentsState) {
-                is UiState.Loading -> CircularProgressIndicator()
-                is UiState.Success -> {
-                    val payments = paymentsData.data
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(payments) { payment ->
-                            PaymentItem(payment)
+                // ----- MIEMBROS -----
+                when (membersState) {
+                    is UiState.Loading -> CircularProgressIndicator()
+                    is UiState.Success -> {
+                        val members = (membersState as UiState.Success<List<Member>>).data
+                        LazyColumn {
+                            items(members) { member ->
+                                MemberItem(member)
+                            }
                         }
                     }
+                    is UiState.Error -> Text(
+                        (membersState as UiState.Error).message,
+                        color = Color.Red
+                    )
+                    else -> {}
                 }
-                else -> {} // Idle o Error ya manejado
             }
+            is UiState.Error -> Text(
+                "Error: ${(planState as UiState.Error).message}",
+                color = Color.Red
+            )
+            else -> {}
+        }
 
-            Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
-            Button(
-                onClick = { navController.navigate("register_payment/$planId") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Registrar pago")
+        // ----- PAGOS -----
+        Text("Pagos", fontSize = 20.sp)
+        when (paymentsState) {
+            is UiState.Loading -> CircularProgressIndicator()
+            is UiState.Success -> {
+                val payments = (paymentsState as UiState.Success<List<Payment>>).data
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(payments) { payment ->
+                        PaymentItem(payment)
+                    }
+                }
             }
+            is UiState.Error -> Text(
+                "Error: ${(paymentsState as UiState.Error).message}", color = Color.Red
+            )
+            else -> {}
         }
     }
 }
@@ -137,7 +155,6 @@ fun MemberItem(member: Member) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Spacer(modifier = Modifier.size(16.dp))
         Text(
             text = member.name ?: "Sin nombre",
@@ -154,7 +171,7 @@ fun PaymentItem(payment: Payment) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(payment.member.name ?: "Miembro desconocido", Modifier.weight(1f))
+        Text(payment.member?.name ?: "Miembro desconocido", Modifier.weight(1f))
         Text("$${payment.amount}", fontWeight = FontWeight.Bold)
     }
 }
