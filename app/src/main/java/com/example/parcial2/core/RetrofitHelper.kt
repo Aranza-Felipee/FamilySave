@@ -9,7 +9,7 @@ object RetrofitHelper {
     fun getRetrofit(): Retrofit{
 
         return Retrofit.Builder()
-            .baseUrl("https://jsonplaceholder.typicode.com/")//En esta linea se cambia la url para conectarse a la api
+            .baseUrl("http://192.168.20.9:3000/")//En esta linea se cambia la url para conectarse a la api
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 

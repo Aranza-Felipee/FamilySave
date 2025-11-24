@@ -2,9 +2,11 @@ package com.example.parcial2.view
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
@@ -17,11 +19,23 @@ fun MainScreen(modifier: Modifier = Modifier) {
         composable("create_plan") {
             CreatePlanScreen(navController)
         }
-        composable("saving_plan_detail") {
-            SavingPlanDetailScreen(navController)
+        composable(
+            route = "saving_plan_detail/{planId}",
+            arguments = listOf(navArgument("planId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val planId = backStackEntry.arguments?.getString("planId")
+            if (planId != null) {
+                SavingPlanDetailScreen(navController = navController, planId = planId)
+            }
         }
-        composable("register_payment") {
-            RegisterPaymentScreen(navController)
+        composable(
+            route = "register_payment/{planId}",
+            arguments = listOf(navArgument("planId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val planId = backStackEntry.arguments?.getString("planId")
+            if (planId != null) {
+                RegisterPaymentScreen(navController = navController, planId = planId)
+            }
         }
     }
 }

@@ -1,11 +1,14 @@
 package com.example.parcial2.repository
 
 import com.example.parcial2.core.ApiService
+import com.example.parcial2.core.RetrofitHelper
 import com.example.parcial2.model.Member
 import com.example.parcial2.model.PaymentRequest
 import com.example.parcial2.model.Plan
 
-class SavingRepository(private val api: ApiService) {
+class SavingRepository {
+
+    private val api: ApiService = RetrofitHelper.getRetrofit().create(ApiService::class.java)
 
     suspend fun getPlans() = api.getPlans()
     suspend fun getPlanById(id: String) = api.getPlanById(id)

@@ -11,32 +11,33 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    // Conexiones con los endpoints de la api
 
-    @POST("plans")
+    // PLANES
+    @POST("api/plans")
     suspend fun createPlan(@Body plan: Plan): Response<Plan>
 
-    @GET("plans")
+    @GET("api/plans")
     suspend fun getPlans(): Response<List<Plan>>
 
-    @GET("plans/{id}")
+    @GET("api/plans/{id}")
     suspend fun getPlanById(@Path("id") id: String): Response<Plan>
 
 
-    @POST("members")
+    // MIEMBROS
+    @POST("api/members")
     suspend fun createMember(@Body member: Member): Response<Member>
 
-    @GET("members")
+    @GET("api/members")
     suspend fun getMembers(): Response<List<Member>>
 
-    @GET("members/plan/{planId}")
+    @GET("api/members/plan/{planId}")
     suspend fun getMembersByPlan(@Path("planId") planId: String): Response<List<Member>>
 
 
-
-    @POST("payments")
+    // PAGOS
+    @POST("api/payments")
     suspend fun createPayment(@Body payment: PaymentRequest): Response<Payment>
 
-    @GET("payments/plan/{planId}")
+    @GET("api/payments/plan/{planId}")
     suspend fun getPaymentsByPlan(@Path("planId") planId: String): Response<List<Payment>>
 }

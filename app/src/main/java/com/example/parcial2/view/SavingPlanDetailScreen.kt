@@ -1,5 +1,6 @@
 package com.example.parcial2.view
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,82 +9,140 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.example.parcial2.core.UiState
+import com.example.parcial2.model.Member
+import com.example.parcial2.model.Payment
+import com.example.parcial2.model.Plan
+import com.example.parcial2.repository.SavingRepository
+import com.example.parcial2.viewmodel.PaymentViewModel
+import com.example.parcial2.viewmodel.PlanViewModel
+import com.example.parcial2.viewmodel.ViewModelFactory
 
 @Composable
-fun SavingPlanDetailScreen(navController: NavController) {
+fun SavingPlanDetailScreen(
+    navController: NavController,
+    planId: String
+) {
+    val factory = ViewModelFactory(SavingRepository())
+
+    val planViewModel: PlanViewModel = viewModel(factory = factory)
+    val paymentViewModel: PaymentViewModel = viewModel(factory = factory)
+
+    val planState by planViewModel.planDetail.collectAsState()
+    val paymentsState by paymentViewModel.payments.collectAsState()
+
+    LaunchedEffect(planId) {
+        planViewModel.fetchPlanById(planId)
+        paymentViewModel.fetchPaymentsByPlan(planId)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Ahorro para viaje familiar",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "12 meses",
-            fontSize = 16.sp
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "5.000.000",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "Miembros",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.align(Alignment.Start)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        MemberItem("Jorge")
-        MemberItem("Ana")
-        MemberItem("Luis")
-        Spacer(modifier = Modifier.weight(1f))
+
+        // ----- PLAN -----
+        when (planState) {
+            is UiState.Loading -> CircularProgressIndicator()
+            is UiState.Success -> {
+                val plan = (planState as UiState.Success<Plan>).data
+
+                Text(text = plan.name ?: "Sin nombre", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(text = "${plan.durationInMonths} meses")
+                Spacer(Modifier.height(8.dp))
+                Text(text = "$${plan.goalAmount}")
+
+                Spacer(Modifier.height(32.dp))
+
+                Text("Miembros", fontSize = 20.sp)
+                Spacer(Modifier.height(16.dp))
+
+                LazyColumn {
+                    items(plan.members ?: emptyList()) { member ->
+                        MemberItem(member)
+                    }
+                }
+            }
+            is UiState.Error -> Text("Error: ${(planState as UiState.Error).message}", color = Color.Red)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // ----- PAGOS -----
+        Text("Pagos", fontSize = 20.sp)
+        Spacer(Modifier.height(16.dp))
+
+        when (paymentsState) {
+            is UiState.Loading -> CircularProgressIndicator()
+            is UiState.Success -> {
+                val payments = (paymentsState as UiState.Success<List<Payment>>).data
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(payments) { payment ->
+                        PaymentItem(payment)
+                    }
+                }
+            }
+            is UiState.Error ->
+                Text("Error: ${(paymentsState as UiState.Error).message}", color = Color.Red)
+        }
+
         Button(
-            onClick = { navController.navigate("register_payment") },
+            onClick = { navController.navigate("register_payment/$planId") },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Registrar pago")
+            Text("Registrar pago")
         }
     }
 }
 
+
 @Composable
-fun MemberItem(name: String) {
+fun MemberItem(member: Member) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Default.Person,
-            contentDescription = "Member Icon",
-            modifier = Modifier.size(24.dp)
-        )
+
         Spacer(modifier = Modifier.size(16.dp))
         Text(
-            text = name,
+            text = member.name ?: "Sin nombre",
             fontSize = 18.sp
         )
+    }
+}
+
+@Composable
+fun PaymentItem(payment: Payment) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(payment.member.name ?: "Miembro desconocido", Modifier.weight(1f))
+        Text("$${payment.amount}", fontWeight = FontWeight.Bold)
     }
 }
