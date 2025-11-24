@@ -1,5 +1,6 @@
 package com.example.parcial2.core
 
+import com.example.parcial2.model.CreatePlanRequest
 import com.example.parcial2.model.Member
 import com.example.parcial2.model.Payment
 import com.example.parcial2.model.PaymentRequest
@@ -14,7 +15,7 @@ interface ApiService {
 
     // PLANES
     @POST("api/plans")
-    suspend fun createPlan(@Body plan: Plan): Response<Plan>
+    suspend fun createPlan(@Body request: CreatePlanRequest): Response<Plan>
 
     @GET("api/plans")
     suspend fun getPlans(): Response<List<Plan>>

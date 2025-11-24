@@ -53,7 +53,7 @@ fun CreatePlanScreen(navController: NavController) {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Reacciona a cambios de estado
+    // Mostrar errores y navegación solo una vez
     LaunchedEffect(state) {
         when (state) {
             is UiState.Success -> {
@@ -67,9 +67,7 @@ fun CreatePlanScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
+    Scaffold(snackbarHost = { SnackbarHost(hostState = snackbarHostState) }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -84,6 +82,7 @@ fun CreatePlanScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Campos de entrada
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
@@ -116,22 +115,30 @@ fun CreatePlanScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-            Spacer(modifier = Modifier.weight(1f))
 
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Botón Crear
             Button(
                 onClick = {
+                    // Validaciones en la vista antes de llamar al ViewModel
                     val amountDouble = meta.toDoubleOrNull()
                     val monthsInt = meses.toIntOrNull()
 
                     if (nombre.isBlank() || motivo.isBlank() || meta.isBlank() || meses.isBlank()) {
-                        vm.setError("Campos vacíos")
+                        vm.setError("Todos los campos son obligatorios")
                         return@Button
                     }
-                    if (amountDouble == null || monthsInt == null) {
-                        vm.setError("Meta o meses no válidos")
+                    if (amountDouble == null || amountDouble <= 0) {
+                        vm.setError("Ingrese un monto válido")
+                        return@Button
+                    }
+                    if (monthsInt == null || monthsInt <= 0) {
+                        vm.setError("Ingrese una cantidad de meses válida")
                         return@Button
                     }
 
+                    // Solo si pasó la validación, llamamos al ViewModel
                     vm.createPlan(
                         name = nombre,
                         motive = motivo,
@@ -147,6 +154,7 @@ fun CreatePlanScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Indicador de carga
             if (state is UiState.Loading) {
                 CircularProgressIndicator()
             }

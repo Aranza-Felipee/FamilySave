@@ -47,4 +47,11 @@ class PaymentViewModel(private val repo: SavingRepository) : ViewModel() {
             }
         }
     }
+    fun resetState() {
+        _paymentResult.value = UiState.Idle
+    }
+    fun setError(message: String) {
+        _paymentResult.value = UiState.Error(message)
+    }
+
 }
