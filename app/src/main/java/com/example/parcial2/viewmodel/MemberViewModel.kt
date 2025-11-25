@@ -20,7 +20,12 @@ class MemberViewModel(private val repository: SavingRepository) : ViewModel() {
             try {
                 val response = repository.getMembersByPlan(planId)
                 if (response.isSuccessful) {
-                    _members.value = UiState.Success(response.body() ?: emptyList())
+                    val members = response.body()
+                    if (members.isNullOrEmpty()) {
+                        _members.value = UiState.Error("No se encontraron miembros para este plan.")
+                    } else {
+                        _members.value = UiState.Success(members)
+                    }
                 } else {
                     _members.value = UiState.Error("Error ${response.code()}")
                 }

@@ -43,33 +43,30 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
             _planDetail.value = UiState.Loading
             try {
                 val res = repo.getPlanById(id)
-                if (res.isSuccessful)
+                if (res.isSuccessful && res.body() != null) {
                     _planDetail.value = UiState.Success(res.body()!!)
-                else
-                    _planDetail.value = UiState.Error("Error: ${res.code()}")
+                } else {
+                    _planDetail.value = UiState.Error("Error: ${res.code()} o plan no encontrado")
+                }
             } catch (e: Exception) {
                 _planDetail.value = UiState.Error(e.message ?: "Error inesperado")
             }
         }
     }
 
-
-
     fun fetchMembersByPlan(planId: String) {
         viewModelScope.launch {
             Log.d("PlanVM", "Fetching members for planId: $planId")
             _members.value = UiState.Loading
             try {
-                val res = repo.getMembersByPlanId(planId)
+                val res = repo.getMembersByPlan(planId) // Usando la función corregida
                 if (res.isSuccessful) {
-                    val body = res.body() ?: emptyList()
-                    if (body.isEmpty()) {
+                    val body = res.body()
+                    if (body.isNullOrEmpty()) {
                         _members.value = UiState.Error("No hay miembros en este plan")
                     } else {
                         _members.value = UiState.Success(body)
                     }
-                } else if (res.code() == 404) {
-                    _members.value = UiState.Error("No se encontraron miembros para este plan")
                 } else {
                     _members.value = UiState.Error("Error: ${res.code()}")
                 }
@@ -79,6 +76,3 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
         }
     }
 }
-
-
-

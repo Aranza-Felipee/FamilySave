@@ -64,8 +64,6 @@ fun SavingPlanDetailScreen(
         planViewModel.fetchPlanById(planId)
         planViewModel.fetchMembersByPlan(planId)
         paymentViewModel.fetchPaymentsByPlan(planId)
-
-        planViewModel.fetchMembersByPlan(planId)
     }
 
     Column(

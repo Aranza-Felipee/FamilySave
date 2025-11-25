@@ -114,10 +114,16 @@ fun FamilySavingPlanScreen(navController: NavController) {
 
 @Composable
 fun SavingPlanItem(plan: Plan, navController: NavController) {
-    Card(
-        modifier = Modifier
+    val modifier = if (!plan.id.isNullOrBlank()) {
+        Modifier
             .fillMaxWidth()
-            .clickable { navController.navigate("saving_plan_detail/${plan.id}") },
+            .clickable { navController.navigate("saving_plan_detail/${plan.id}") }
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
+    Card(
+        modifier = modifier,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
