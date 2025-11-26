@@ -18,11 +18,6 @@ class SavingRepository {
         return api.createPlan(request) // api: tu servicio Retrofit
     }
 
-    suspend fun getMembersByPlanId(planId: String): Response<List<Member>> {
-        return api.getMembersByPlanId(planId) // Aquí tu API debe tener un endpoint
-    }
-
-
     suspend fun getMembersByPlan(planId: String) = api.getMembersByPlan(planId)
     suspend fun createMember(member: Member) = api.createMember(member)
 

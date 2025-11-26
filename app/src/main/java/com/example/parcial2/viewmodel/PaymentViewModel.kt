@@ -30,8 +30,8 @@ class PaymentViewModel(private val repo: SavingRepository) : ViewModel() {
         }
     }
 
-    private val _paymentResult = MutableStateFlow<UiState<Payment>>(UiState.Loading)
-    val paymentResult: StateFlow<UiState<Payment>> = _paymentResult
+    private val _paymentResult = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val paymentResult: StateFlow<UiState<Unit>> = _paymentResult
 
     fun registerPayment(req: PaymentRequest) {
         viewModelScope.launch {
@@ -39,7 +39,7 @@ class PaymentViewModel(private val repo: SavingRepository) : ViewModel() {
             try {
                 val res = repo.createPayment(req)
                 if (res.isSuccessful)
-                    _paymentResult.value = UiState.Success(res.body()!!)
+                    _paymentResult.value = UiState.Success(Unit)
                 else
                     _paymentResult.value = UiState.Error("Error: ${res.code()}")
             } catch (e: Exception) {
@@ -54,4 +54,7 @@ class PaymentViewModel(private val repo: SavingRepository) : ViewModel() {
         _paymentResult.value = UiState.Error(message)
     }
 
+    fun onDispose() {
+        _paymentResult.value = UiState.Idle
+    }
 }

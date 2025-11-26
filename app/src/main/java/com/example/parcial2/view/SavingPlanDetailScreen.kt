@@ -1,6 +1,5 @@
 package com.example.parcial2.view
 
-import android.R.attr.text
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.wear.compose.materialcore.Text
+
 import com.example.parcial2.core.UiState
 import com.example.parcial2.model.Member
 import com.example.parcial2.model.Payment

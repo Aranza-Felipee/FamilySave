@@ -1,6 +1,5 @@
 package com.example.parcial2.view
 
-import android.R.attr.onClick
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,11 +38,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.parcial2.core.UiState
+import com.example.parcial2.model.Member
 import com.example.parcial2.model.PaymentRequest
-import com.example.parcial2.model.Plan
 import com.example.parcial2.repository.SavingRepository
+import com.example.parcial2.viewmodel.MemberViewModel
 import com.example.parcial2.viewmodel.PaymentViewModel
-import com.example.parcial2.viewmodel.PlanViewModel
 import com.example.parcial2.viewmodel.ViewModelFactory
 import kotlinx.coroutines.launch
 
@@ -51,20 +51,26 @@ import kotlinx.coroutines.launch
 fun RegisterPaymentScreen(
     navController: NavController,
     planId: String,
-    planViewModel: PlanViewModel = viewModel(factory = ViewModelFactory(SavingRepository())),
+    memberViewModel: MemberViewModel = viewModel(factory = ViewModelFactory(SavingRepository())),
     paymentViewModel: PaymentViewModel = viewModel(factory = ViewModelFactory(SavingRepository()))
 ) {
-    val planState by planViewModel.planDetail.collectAsState()
+    val membersState by memberViewModel.members.collectAsState()
     val paymentResultState by paymentViewModel.paymentResult.collectAsState()
 
-    var selectedMember by remember { mutableStateOf("") }
+    var selectedMember by remember { mutableStateOf<Member?>(null) }
     var amount by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    DisposableEffect(Unit) {
+        onDispose {
+            paymentViewModel.onDispose()
+        }
+    }
+
     LaunchedEffect(planId) {
-        planViewModel.fetchPlanById(planId)
+        memberViewModel.fetchMembersByPlan(planId)
     }
 
     // Observa los resultados de registro de pago
@@ -101,10 +107,10 @@ fun RegisterPaymentScreen(
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            when (planState) {
+            when (membersState) {
                 is UiState.Loading -> CircularProgressIndicator()
                 is UiState.Success -> {
-                    val plan = (planState as UiState.Success<Plan>).data
+                    val members = (membersState as UiState.Success<List<Member>>).data
 
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -112,7 +118,7 @@ fun RegisterPaymentScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         TextField(
-                            value = selectedMember,
+                            value = selectedMember?.name ?: "",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Miembro") },
@@ -121,44 +127,26 @@ fun RegisterPaymentScreen(
                             },
                             modifier = Modifier.menuAnchor().fillMaxWidth()
                         )
-                        ExposedDropdownMenuBox(
+                        ExposedDropdownMenu(
                             expanded = expanded,
-                            onExpandedChange = { expanded = !expanded },
-                            modifier = Modifier.fillMaxWidth()
+                            onDismissRequest = { expanded = false }
                         ) {
-                            TextField(
-                                value = selectedMember,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Miembro") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                (plan.members ?: emptyList()).forEach { member ->
-                                    val memberName = member.name ?: "Sin nombre"
-                                    DropdownMenuItem(
-                                        text = { Text(memberName) },
-                                        onClick = {
-                                            selectedMember = memberName
-                                            expanded = false
-                                        }
-                                    )
-                                }
+                            members.forEach { member ->
+                                val memberName = member.name ?: "Sin nombre"
+                                DropdownMenuItem(
+                                    text = { Text(memberName) },
+                                    onClick = {
+                                        selectedMember = member
+                                        expanded = false
+                                    }
+                                )
                             }
                         }
                     }
                 }
                 is UiState.Error -> {
-                    Text("Error: ${(planState as UiState.Error).message}", color = Color.Red)
+                    Text("Error: ${(membersState as UiState.Error).message}", color = Color.Red)
                 }
-
                 else -> {}
             }
 
@@ -177,21 +165,23 @@ fun RegisterPaymentScreen(
             Button(
                 onClick = {
                     val amountDouble = amount.toDoubleOrNull()
-                    if (selectedMember.isBlank() || amountDouble == null) {
+                    if (selectedMember == null || amountDouble == null) {
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Miembro o monto inválido")
                         }
                         return@Button
                     }
-                    val paymentRequest = PaymentRequest(
-                        planId = planId,
-                        memberName = selectedMember,
-                        amount = amountDouble
-                    )
-                    paymentViewModel.registerPayment(paymentRequest)
+                    selectedMember?.id?.let { memberIdValue ->
+                        val paymentRequest = PaymentRequest(
+                            planId = planId,
+                            memberId = memberIdValue,
+                            amount = amountDouble
+                        )
+                        paymentViewModel.registerPayment(paymentRequest)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = selectedMember.isNotEmpty() && amount.isNotEmpty()
+                enabled = selectedMember != null && amount.isNotEmpty()
             ) {
                 Text("Registrar")
             }

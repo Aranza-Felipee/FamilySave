@@ -28,16 +28,13 @@ interface ApiService {
     @POST("api/members")
     suspend fun createMember(@Body member: Member): Response<Member>
 
-    @GET("plans/{planId}/members")
-    suspend fun getMembersByPlanId(@Path("planId") planId: String): Response<List<Member>>
-
     @GET("api/members/plan/{planId}")
     suspend fun getMembersByPlan(@Path("planId") planId: String): Response<List<Member>>
 
 
     // PAGOS
     @POST("api/payments")
-    suspend fun createPayment(@Body payment: PaymentRequest): Response<Payment>
+    suspend fun createPayment(@Body payment: PaymentRequest): Response<Unit>
 
     @GET("api/payments/plan/{planId}")
     suspend fun getPaymentsByPlan(@Path("planId") planId: String): Response<List<Payment>>
