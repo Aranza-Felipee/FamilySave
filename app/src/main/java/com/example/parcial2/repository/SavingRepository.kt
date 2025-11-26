@@ -2,6 +2,7 @@ package com.example.parcial2.repository
 
 import com.example.parcial2.core.ApiService
 import com.example.parcial2.core.RetrofitHelper
+import com.example.parcial2.model.AddMemberRequest
 import com.example.parcial2.model.CreatePlanRequest
 import com.example.parcial2.model.Member
 import com.example.parcial2.model.PaymentRequest
@@ -20,7 +21,7 @@ class SavingRepository {
 
 
     suspend fun getMembersByPlan(planId: String) = api.getMembersByPlan(planId)
-    suspend fun createMember(member: Member) = api.createMember(member)
+    suspend fun createMember(member: AddMemberRequest) = api.createMember(member)
 
     suspend fun createPayment(payment: PaymentRequest) = api.createPayment(payment)
     suspend fun getPaymentsByPlan(planId: String) = api.getPaymentsByPlan(planId)
