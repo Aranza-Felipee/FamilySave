@@ -15,8 +15,9 @@ class SavingRepository {
     suspend fun getPlans() = api.getPlans()
     suspend fun getPlanById(id: String) = api.getPlanById(id)
     suspend fun createPlan(request: CreatePlanRequest): Response<Plan> {
-        return api.createPlan(request) // api: tu servicio Retrofit
+        return api.createPlan(request)
     }
+
 
     suspend fun getMembersByPlan(planId: String) = api.getMembersByPlan(planId)
     suspend fun createMember(member: Member) = api.createMember(member)

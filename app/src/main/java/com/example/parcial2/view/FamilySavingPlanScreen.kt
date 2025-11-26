@@ -68,6 +68,8 @@ fun FamilySavingPlanScreen(navController: NavController) {
         Button(onClick = { navController.navigate("create_plan") }) {
             Text(text = "Crear plan")
         }
+        Spacer(modifier = Modifier.height(12.dp))
+
         Spacer(modifier = Modifier.height(32.dp))
         Text(
             text = "Planes de ahorro",

@@ -19,10 +19,6 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
     private val _planDetail = MutableStateFlow<UiState<Plan>>(UiState.Loading)
     val planDetail: StateFlow<UiState<Plan>> = _planDetail
 
-
-    private val _members = MutableStateFlow<UiState<List<Member>>>(UiState.Idle)
-    val members: StateFlow<UiState<List<Member>>> get() = _members
-
     fun fetchPlans() {
         viewModelScope.launch {
             _plans.value = UiState.Loading
@@ -50,28 +46,6 @@ class PlanViewModel(private val repo: SavingRepository) : ViewModel() {
                 }
             } catch (e: Exception) {
                 _planDetail.value = UiState.Error(e.message ?: "Error inesperado")
-            }
-        }
-    }
-
-    fun fetchMembersByPlan(planId: String) {
-        viewModelScope.launch {
-            Log.d("PlanVM", "Fetching members for planId: $planId")
-            _members.value = UiState.Loading
-            try {
-                val res = repo.getMembersByPlan(planId) // Usando la función corregida
-                if (res.isSuccessful) {
-                    val body = res.body()
-                    if (body.isNullOrEmpty()) {
-                        _members.value = UiState.Error("No hay miembros en este plan")
-                    } else {
-                        _members.value = UiState.Success(body)
-                    }
-                } else {
-                    _members.value = UiState.Error("Error: ${res.code()}")
-                }
-            } catch (e: Exception) {
-                _members.value = UiState.Error(e.message ?: "Error inesperado")
             }
         }
     }
