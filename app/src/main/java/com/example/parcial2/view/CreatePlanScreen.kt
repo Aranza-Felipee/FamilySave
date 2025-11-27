@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.parcial2.core.UiState
-import com.example.parcial2.repository.SavingRepository
+import com.example.parcial2.repository.SavingRepositoryImpl
 import com.example.parcial2.viewmodel.CreatePlanViewModel
 import com.example.parcial2.viewmodel.ViewModelFactory
 
@@ -40,7 +40,7 @@ import com.example.parcial2.viewmodel.ViewModelFactory
 @Composable
 fun CreatePlanScreen(navController: NavController) {
 
-    val repo = SavingRepository()
+    val repo = SavingRepositoryImpl()
     val factory = ViewModelFactory(repo)
     val vm: CreatePlanViewModel = viewModel(factory = factory)
 
