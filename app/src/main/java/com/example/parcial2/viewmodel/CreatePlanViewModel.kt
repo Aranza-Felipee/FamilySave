@@ -54,6 +54,6 @@ class CreatePlanViewModel(private val repo: SavingRepository) : ViewModel() {
 
 
     fun resetState() {
-        _createState.value = UiState.Loading
+        _createState.value = UiState.Idle
     }
 }

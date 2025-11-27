@@ -9,21 +9,21 @@ import com.example.parcial2.model.PaymentRequest
 import com.example.parcial2.model.Plan
 import retrofit2.Response
 
-class SavingRepository {
+open class SavingRepository {
 
     private val api: ApiService = RetrofitHelper.getRetrofit().create(ApiService::class.java)
 
-    suspend fun getPlans() = api.getPlans()
-    suspend fun getPlanById(id: String) = api.getPlanById(id)
-    suspend fun createPlan(request: CreatePlanRequest): Response<Plan> {
+    open suspend fun getPlans() = api.getPlans()
+    open suspend fun getPlanById(id: String) = api.getPlanById(id)
+    open suspend fun createPlan(request: CreatePlanRequest): Response<Plan> {
         return api.createPlan(request)
     }
 
 
-    suspend fun getMembersByPlan(planId: String) = api.getMembersByPlan(planId)
-    suspend fun createMember(member: AddMemberRequest) = api.createMember(member)
+    open suspend fun getMembersByPlan(planId: String) = api.getMembersByPlan(planId)
+    open suspend fun createMember(member: AddMemberRequest) = api.createMember(member)
 
-    suspend fun createPayment(payment: PaymentRequest) = api.createPayment(payment)
-    suspend fun getPaymentsByPlan(planId: String) = api.getPaymentsByPlan(planId)
+    open suspend fun createPayment(payment: PaymentRequest) = api.createPayment(payment)
+    open suspend fun getPaymentsByPlan(planId: String) = api.getPaymentsByPlan(planId)
 
 }
