@@ -46,7 +46,7 @@ class PlanViewModelTest {
             category = "Para un coche nuevo",
             goalAmount = 20000.0,
             durationInMonths = 12,
-            createdAt = "2023-01-01T12:00:00Z",
+            createdAt = "2023-10-27T10:00:00Z",
             members = emptyList()
         )
         val mockResponse = Response.success(expectedPlan)
